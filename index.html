@@ -114,7 +114,6 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Top Navigation Header -->
     <header class="sticky top-0 z-40 glass-panel border-b border-gray-800/80 px-4 lg:px-8 py-3 transition-all">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
             
@@ -133,10 +132,14 @@
 
             <!-- Action Buttons & Auto Sync Status -->
             <div class="flex items-center space-x-3">
-                <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-[11px] text-emerald-300">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <div id="syncBadge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-[11px] text-emerald-300">
+                    <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span id="syncStatusLabel">連結 MOVIE 工作表中...</span>
                 </div>
+                <button id="importModalBtn" onclick="openImportModal()" class="px-3.5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs text-gray-200 font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-import text-xs text-amber-400"></i>
+                    <span>匯入檔案 / 連結</span>
+                </button>
                 <button id="syncBtn" onclick="syncMovieSheet(true)" class="px-3.5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-xs text-white font-semibold transition flex items-center gap-1.5 shadow-md shadow-emerald-900/30">
                     <i id="syncIcon" class="fa-solid fa-rotate text-xs"></i>
                     <span>同步最新紀錄</span>
@@ -145,7 +148,6 @@
         </div>
     </header>
 
-    <!-- Main Workspace Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
 
         <!-- Dashboard Analytics Section -->
@@ -175,7 +177,7 @@
 
                 <div class="glass-panel rounded-2xl p-4 flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-medium text-gray-400">平均給分 (10 分制)</p>
+                        <p class="text-xs font-medium text-gray-400">平均給分</p>
                         <h3 id="statAvgRating" class="text-2xl font-black text-amber-400 mt-1">0.0 <span class="text-xs font-normal text-gray-400">/ 10</span></h3>
                         <p id="statRatedCount" class="text-[10px] text-gray-500 mt-0.5">已評分電影 0 部 (0%)</p>
                     </div>
@@ -186,7 +188,7 @@
 
                 <div class="glass-panel rounded-2xl p-4 flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-medium text-gray-400">今年已觀看電影數量</p>
+                        <p class="text-xs font-medium text-gray-400">今年已看</p>
                         <h3 id="statCurrentYearCount" class="text-2xl font-black text-cinema-neon mt-1">0 <span class="text-xs font-normal text-gray-400">部</span></h3>
                         <p id="statCurrentYearSub" class="text-[10px] text-gray-500 mt-0.5">本年度觀影紀錄累計</p>
                     </div>
@@ -212,7 +214,7 @@
             <div id="chartRow" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="glass-panel rounded-2xl p-4 flex flex-col justify-between">
                     <h4 class="text-xs font-bold text-gray-300 mb-2 flex items-center gap-1.5">
-                        <i class="fa-solid fa-chart-line text-cinema-neon"></i> 每年度觀影量趨勢
+                        <i class="fa-solid fa-chart-line text-cinema-neon"></i> 歷年趨勢
                     </h4>
                     <div class="relative h-48 w-full flex items-center justify-center">
                         <canvas id="yearlyChart"></canvas>
@@ -230,7 +232,6 @@
             </div>
         </section>
 
-        <!-- Controls & Search Filter Bar -->
         <section class="glass-panel rounded-2xl p-4 space-y-4">
             
             <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
@@ -298,13 +299,11 @@
                     </div>
 
                     <div class="inline-flex rounded-lg bg-gray-900/90 p-1 border border-gray-800">
-                        <button id="viewGridBtn" onclick="switchView('grid')" class="px-3 py-1 rounded-md text-white bg-cinema-accent text-xs font-semibold flex items-center gap-1.5 transition">
+                        <button id="viewGridBtn" onclick="switchView('grid')" title="電影卡片" class="p-2 rounded-md text-white bg-cinema-accent text-xs font-semibold flex items-center transition">
                             <i class="fa-solid fa-grip"></i>
-                            <span>電影卡片</span>
                         </button>
-                        <button id="viewTableBtn" onclick="switchView('table')" class="px-3 py-1 rounded-md text-gray-400 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition">
+                        <button id="viewTableBtn" onclick="switchView('table')" title="緊湊表格" class="p-2 rounded-md text-gray-400 hover:text-white text-xs font-semibold flex items-center transition">
                             <i class="fa-solid fa-list-ul"></i>
-                            <span>緊湊表格</span>
                         </button>
                     </div>
                 </div>
@@ -313,7 +312,6 @@
 
         </section>
 
-        <!-- Movie Display Container -->
         <section id="contentView">
             <div id="gridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"></div>
 
@@ -322,13 +320,15 @@
                     <table class="w-full text-left text-xs text-gray-300">
                         <thead class="bg-gray-900/90 text-gray-400 uppercase border-b border-gray-800 tracking-wider">
                             <tr>
-                                <th class="py-3 px-4 font-semibold">NO</th>
-                                <th class="py-3 px-4 font-semibold">觀影日期</th>
-                                <th class="py-3 px-4 font-semibold">電影譯名 (TW)</th>
-                                <th class="py-3 px-4 font-semibold">原名</th>
-                                <th class="py-3 px-4 font-semibold">評分 (RATE)</th>
-                                <th class="py-3 px-4 font-semibold">導演 / 演員</th>
-                                <th class="py-3 px-4 font-semibold">觀看平台</th>
+                                <th class="py-3 px-3 font-semibold">NO</th>
+                                <th class="py-3 px-3 font-semibold">觀影日期</th>
+                                <th class="py-3 px-3 font-semibold">電影譯名 (TW)</th>
+                                <th class="py-3 px-3 font-semibold">原名</th>
+                                <th class="py-3 px-3 font-semibold">評分</th>
+                                <th class="py-3 px-3 font-semibold">導演</th>
+                                <th class="py-3 px-3 font-semibold">演員</th>
+                                <th class="py-3 px-3 font-semibold">觀看平台</th>
+                                <th class="py-3 px-3 font-semibold text-center">IMDb</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-gray-800/60"></tbody>
@@ -342,11 +342,16 @@
                 </div>
                 <div class="space-y-1">
                     <h3 class="text-base font-bold text-gray-300">尚無符合條件的觀影紀錄</h3>
-                    <p class="text-xs text-gray-500">請嘗試調整搜尋關鍵字或篩選日期與評分條件，或匯入您的試算表檔案。</p>
+                    <p class="text-xs text-gray-500">請嘗試調整搜尋關鍵字，或點選右上角「匯入檔案 / 連結」載入您的試算表。</p>
                 </div>
-                <button onclick="resetAllFilters()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-cinema-accent rounded-xl border border-gray-700 transition">
-                    清除所有條件
-                </button>
+                <div class="flex justify-center gap-3">
+                    <button onclick="resetAllFilters()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-cinema-accent rounded-xl border border-gray-700 transition">
+                        清除所有條件
+                    </button>
+                    <button onclick="openImportModal()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-xs font-semibold text-white rounded-xl transition">
+                        開啟智慧匯入
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -357,7 +362,6 @@
         <p>Cinefolio Engine © 2026 | 支援 Google 試算表、.ODS / .XLSX / .CSV 智慧欄位比對與影人索引解析</p>
     </footer>
 
-    <!-- Modal 1: Smart File & Google Sheets Import Modal -->
     <div id="importModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel max-w-xl w-full rounded-2xl p-6 border border-gray-700/80 shadow-2xl relative space-y-5 animate-fade-in max-h-[90vh] overflow-y-auto">
             
@@ -369,7 +373,7 @@
                 <h3 class="text-lg font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-brain text-cinema-accent"></i> 🧠 智慧資料匯入引擎
                 </h3>
-                <p class="text-xs text-gray-400 mt-1">支援上傳本地檔案、Google 試算表網址匯入或文字貼上。</p>
+                <p class="text-xs text-gray-400 mt-1">支援上傳本地 .ods/.xlsx 檔案、Google 試算表網址匯入或文字貼上。</p>
             </div>
 
             <!-- Tab Buttons -->
@@ -396,7 +400,7 @@
                 <div class="space-y-2">
                     <label class="text-xs font-semibold text-gray-300 block">Google 試算表連結 (URL)：</label>
                     <div class="flex gap-2">
-                        <input type="text" id="googleSheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs.../edit" 
+                        <input type="text" id="googleSheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/1W5q8DK1bMMXn57pbSwE2bqxWUy8XYtBvgOxw0XGvPnU/edit" 
                             class="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-xs text-gray-200 focus:outline-none focus:border-emerald-500">
                         <button onclick="fetchGoogleSheet()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl transition flex items-center gap-1.5 shrink-0">
                             <i class="fa-solid fa-cloud-arrow-down"></i> 抓取並匯入
@@ -425,9 +429,9 @@
                     <button onclick="togglePasteArea()" id="togglePasteText" class="text-[11px] text-cinema-accent hover:underline">展開文字貼上框</button>
                 </label>
                 <textarea id="pasteTextarea" rows="4" placeholder="例如：
-NO	RATE	Date	Title_Original	Title	Director actor	Sourse
-1	8.5	2026-01-15	Oppenheimer	奧本海默	克里斯多福·諾蘭、基利安·墨菲	Netflix
-2	9.0	2026-02-01	Dune: Part Two	沙丘：第二部	丹尼斯·維勒納夫、提摩西·夏勒梅	威秀影城" 
+NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
+1	8.5	2026-01-15	Oppenheimer	奧本海默	克里斯多福·諾蘭	基利安·墨菲	tt1533607	Netflix
+2	9.0	2026-02-01	Dune: Part Two	沙丘：第二部	丹尼斯·維勒納夫	提摩西·夏勒梅	tt15239678	威秀影城" 
                     class="hidden w-full p-3 bg-gray-900 border border-gray-700 rounded-xl text-xs font-mono text-gray-300 focus:outline-none focus:border-cinema-accent"></textarea>
                 <button id="processPasteBtn" onclick="processPastedText()" class="hidden w-full py-2 bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-white rounded-xl border border-gray-600">
                     解析貼上的文字資料
@@ -440,16 +444,18 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
         </div>
     </div>
 
-    <!-- Modal 2: Movie Detailed Lightbox -->
     <div id="detailModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel max-w-lg w-full rounded-2xl p-6 border border-gray-700/80 shadow-2xl relative space-y-4">
             <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
             
-            <div class="flex items-center gap-2">
-                <span id="detailNo" class="px-2.5 py-0.5 rounded-full bg-gray-800 text-[10px] font-mono text-gray-400">#00</span>
-                <span id="detailPlatform" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">Source</span>
+            <div class="flex items-center justify-between pr-8">
+                <div class="flex items-center gap-2">
+                    <span id="detailNo" class="px-2.5 py-0.5 rounded-full bg-gray-800 text-[10px] font-mono text-gray-400">#00</span>
+                    <span id="detailPlatform" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">Source</span>
+                </div>
+                <div id="detailImdbLinkContainer"></div>
             </div>
 
             <div>
@@ -468,9 +474,16 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
                 </div>
             </div>
 
-            <div class="space-y-1.5">
-                <span class="text-xs font-semibold text-gray-400 block"><i class="fa-solid fa-users text-cinema-accent mr-1"></i> 導演與演員成員：</span>
-                <div id="detailPeopleList" class="flex flex-wrap gap-1.5"></div>
+            <div class="space-y-3">
+                <div class="space-y-1.5">
+                    <span class="text-xs font-semibold text-gray-400 block"><i class="fa-solid fa-video text-cinema-neon mr-1"></i> 導演 (Director)：</span>
+                    <div id="detailDirectorList" class="flex flex-wrap gap-1.5"></div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <span class="text-xs font-semibold text-gray-400 block"><i class="fa-solid fa-users text-cinema-accent mr-1"></i> 演員 (Cast)：</span>
+                    <div id="detailCastList" class="flex flex-wrap gap-1.5"></div>
+                </div>
             </div>
 
             <div class="pt-3 border-t border-gray-800 text-right">
@@ -487,29 +500,78 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
         let yearlyChart = null;
         let ratingChart = null;
 
-        // Dedicated Target Google Sheet Configurations
-        const TARGET_SHEET_ID = '1W5q8DK1bMMXn57pbSwE2bqxWUy8XYtBvgOxw0XGvPnU';
+        // Target Google Sheet Configuration (Updated URL)
+        const DEFAULT_PUBLISHED_URL = 'https://docs.google.com/spreadsheets/d/1W5q8DK1bMMXn57pbSwE2bqxWUy8XYtBvgOxw0XGvPnU/edit?gid=0#gid=0';
         const TARGET_SHEET_NAME = 'MOVIE';
 
-        // Sample Preloaded Demo Data (Fallback)
+        // Public CORS Proxies to bypass browser cross-origin blocks in local file:// environment
+        const CORS_PROXIES = [
+            url => url, // Direct Fetch
+            url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+            url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+        ];
+
+        // Fallback Sample Demo Data with separate Director, Cast, and IMDB fields
         const sampleData = [
-            { NO: 1, RATE: 9, Date: '2026-01-05', Title_Original: 'Oppenheimer', Title: '奧本海默', 'Director actor': '克里斯多福·諾蘭、基利安·墨菲', Sourse: 'Theater' },
-            { NO: 2, RATE: 9, Date: '2026-01-12', Title_Original: 'Dune: Part Two', Title: '沙丘：第二部', 'Director actor': '丹尼斯·維勒納夫、提摩西·夏勒梅', Sourse: 'Netflix' },
-            { NO: 3, RATE: 8, Date: '2026-01-20', Title_Original: 'Parasite', Title: '寄生上流', 'Director actor': '奉俊昊、宋康昊', Sourse: 'Catchplay' },
-            { NO: 4, RATE: 10, Date: '2026-02-01', Title_Original: 'Interstellar', Title: '星際效應', 'Director actor': '克里斯多福·諾蘭、馬修·麥康納', Sourse: 'Disney+' },
-            { NO: 5, RATE: 7, Date: '2026-02-14', Title_Original: 'The Dark Knight', Title: '黑暗騎士', 'Director actor': '克里斯多福·諾蘭、克里斯汀·貝爾', Sourse: 'HBO Go' }
+            { NO: 1, RATE: 9, Date: '2026-01-05', Title_Original: 'Oppenheimer', Title: '奧本海默', Director: '克里斯多福·諾蘭', Cast: '基利安·墨菲、艾蜜莉·布朗', IMDB: 'tt1533607', Sourse: 'Theater' },
+            { NO: 2, RATE: 9, Date: '2026-01-12', Title_Original: 'Dune: Part Two', Title: '沙丘：第二部', Director: '丹尼斯·維勒納夫', Cast: '提摩西·夏勒梅、辛蒂亞', IMDB: 'tt15239678', Sourse: 'Netflix' },
+            { NO: 3, RATE: 8, Date: '2026-01-20', Title_Original: 'Parasite', Title: '寄生上流', Director: '奉俊昊', Cast: '宋康昊、李善均', IMDB: 'tt6751668', Sourse: 'Catchplay' },
+            { NO: 4, RATE: 10, Date: '2026-02-01', Title_Original: 'Interstellar', Title: '星際效應', Director: '克里斯多福·諾蘭', Cast: '馬修·麥康納、安·海瑟薇', IMDB: 'tt0816692', Sourse: 'Disney+' },
+            { NO: 5, RATE: 7, Date: '2026-02-14', Title_Original: 'The Dark Knight', Title: '黑暗騎士', Director: '克里斯多福·諾蘭', Cast: '克里斯汀·貝爾、希斯·萊傑', IMDB: 'tt0468569', Sourse: 'HBO Go' }
         ];
 
         window.addEventListener('DOMContentLoaded', () => {
             setupDragAndDrop();
-            // Automatically auto-sync with the MOVIE Google Sheet upon page load
-            syncMovieSheet();
+            
+            // Set default URL input field value
+            const urlInput = document.getElementById('googleSheetUrlInput');
+            if (urlInput) urlInput.value = DEFAULT_PUBLISHED_URL;
+
+            // Automatically sync upon page load
+            syncMovieSheet(false);
         });
 
-        // Robust JSONP fallback to bypass local file:// CORS restrictions
-        function fetchGoogleSheetJSONP(sheetId, sheetName) {
+        // Resolve Sheet URLs for both Published (/d/e/2PACX...) and Standard (/d/SHEET_ID) Links
+        function resolveSheetUrls(inputUrlOrId) {
+            const raw = (inputUrlOrId || '').trim();
+            let urls = [];
+            let jsonpCandidatePaths = [];
+
+            if (raw.includes('/d/e/')) {
+                const match = raw.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
+                if (match && match[1]) {
+                    const pubKey = match[1];
+                    jsonpCandidatePaths.push(`e/${pubKey}`);
+
+                    const gidMatch = raw.match(/[#&?]gid=([0-9]+)/);
+                    const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '&gid=0';
+
+                    urls.push(`https://docs.google.com/spreadsheets/d/e/${pubKey}/pub?output=csv${gidParam}&single=true`);
+                    urls.push(`https://docs.google.com/spreadsheets/d/e/${pubKey}/pub?output=csv`);
+                    urls.push(`https://docs.google.com/spreadsheets/d/e/${pubKey}/gviz/tq?tqx=out:csv`);
+                }
+            } else {
+                let sheetId = raw;
+                const matches = raw.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (matches && matches[1]) {
+                    sheetId = matches[1];
+                }
+                jsonpCandidatePaths.push(sheetId);
+
+                const gidMatch = raw.match(/[#&?]gid=([0-9]+)/);
+                const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
+
+                urls.push(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(TARGET_SHEET_NAME)}`);
+                urls.push(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv${gidParam}`);
+                urls.push(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`);
+            }
+
+            return { urls, jsonpCandidatePaths };
+        }
+
+        function fetchGoogleSheetJSONP(path, sheetName = '') {
             return new Promise((resolve, reject) => {
-                const callbackName = 'gvizCallback_' + Date.now();
+                const callbackName = 'gvizCallback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
                 const script = document.createElement('script');
                 
                 const timeout = setTimeout(() => {
@@ -524,12 +586,35 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
                     if (script.parentNode) script.parentNode.removeChild(script);
 
                     try {
-                        if (!data || !data.table) {
-                            reject(new Error('GViz 資料無效'));
+                        if (!data || !data.table || !data.table.rows) {
+                            reject(new Error('GViz 資料結構無效'));
                             return;
                         }
-                        const cols = data.table.cols.map(c => (c ? (c.label || c.id || '') : ''));
-                        const rows = data.table.rows.map(r => {
+
+                        let cols = data.table.cols.map(c => (c && c.label ? c.label.trim() : ''));
+                        const hasMeaningfulLabels = cols.some(l => l && !/^col_\d+$/i.test(l) && l !== '');
+
+                        let startRowIdx = 0;
+                        // If GViz didn't report column labels, check if row 0 contains the header names
+                        if (!hasMeaningfulLabels && data.table.rows.length > 0) {
+                            const firstRow = data.table.rows[0];
+                            if (firstRow && firstRow.c) {
+                                const candidateCols = firstRow.c.map((cell, idx) => {
+                                    if (cell && (cell.v !== null && cell.v !== undefined)) {
+                                        return String(cell.v).trim();
+                                    }
+                                    return `col_${idx}`;
+                                });
+                                if (candidateCols.some(c => c && c.length > 0)) {
+                                    cols = candidateCols;
+                                    startRowIdx = 1;
+                                }
+                            }
+                        }
+
+                        const rows = [];
+                        for (let i = startRowIdx; i < data.table.rows.length; i++) {
+                            const r = data.table.rows[i];
                             const obj = {};
                             if (r && r.c) {
                                 r.c.forEach((cell, idx) => {
@@ -541,68 +626,83 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
                                     }
                                 });
                             }
-                            return obj;
-                        });
+                            rows.push(obj);
+                        }
                         resolve(rows);
                     } catch (e) {
                         reject(e);
                     }
                 };
 
-                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=responseHandler:${callbackName}`;
+                const sheetParam = sheetName ? `&sheet=${encodeURIComponent(sheetName)}` : '';
+                const url = `https://docs.google.com/spreadsheets/d/${path}/gviz/tq?tqx=responseHandler:${callbackName}${sheetParam}`;
                 script.src = url;
                 script.onerror = () => {
                     clearTimeout(timeout);
                     delete window[callbackName];
                     if (script.parentNode) script.parentNode.removeChild(script);
-                    reject(new Error('JSONP 載入失敗'));
+                    reject(new Error('JSONP 載入腳本失敗'));
                 };
                 document.head.appendChild(script);
             });
         }
 
-        // Dedicated Auto Sync Function for MOVIE Google Sheet
         async function syncMovieSheet(showToast = false) {
             const syncIcon = document.getElementById('syncIcon');
             const statusLabel = document.getElementById('syncStatusLabel');
+            const syncBadge = document.getElementById('syncBadge');
+            const syncDot = document.getElementById('syncDot');
 
             if (syncIcon) syncIcon.classList.add('fa-spin');
-            if (statusLabel) statusLabel.innerText = '正在讀取 MOVIE 資料...';
+            if (statusLabel) statusLabel.innerText = '正在同步 MOVIE 資料...';
+            if (syncDot) syncDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
 
-            const primaryUrl = `https://docs.google.com/spreadsheets/d/${TARGET_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(TARGET_SHEET_NAME)}`;
-            const fallbackUrl = `https://docs.google.com/spreadsheets/d/${TARGET_SHEET_ID}/export?format=csv&sheet=${encodeURIComponent(TARGET_SHEET_NAME)}`;
-
+            const urlInput = document.getElementById('googleSheetUrlInput')?.value || DEFAULT_PUBLISHED_URL;
+            const { urls, jsonpCandidatePaths } = resolveSheetUrls(urlInput);
             let jsonData = null;
+            const isLocalFile = window.location.protocol === 'file:';
 
-            // Attempt 1: Fetch CSV directly
-            try {
-                let csvText = '';
-                let response = await fetch(primaryUrl);
-                if (response.ok) {
-                    csvText = await response.text();
+            // Strategy 1: JSONP Channel (Primary for local file:// mode to bypass CORS)
+            for (let path of jsonpCandidatePaths) {
+                if (jsonData && jsonData.length > 0) break;
+                try {
+                    jsonData = await fetchGoogleSheetJSONP(path, TARGET_SHEET_NAME);
+                    if (jsonData && jsonData.length > 0) break;
+                } catch (e1) {
+                    try {
+                        jsonData = await fetchGoogleSheetJSONP(path, '');
+                        if (jsonData && jsonData.length > 0) break;
+                    } catch (e2) {
+                        // Continue to strategy 2
+                    }
                 }
-
-                if (!csvText || csvText.trim().startsWith('<!DOCTYPE html>')) {
-                    response = await fetch(fallbackUrl);
-                    if (response.ok) csvText = await response.text();
-                }
-
-                if (csvText && !csvText.trim().startsWith('<!DOCTYPE html>')) {
-                    const workbook = XLSX.read(csvText, { type: 'string' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-                }
-            } catch (err) {
-                console.warn('Fetch failed (likely file:// CORS restrictions). Falling back to JSONP protocol...', err);
             }
 
-            // Attempt 2: JSONP Fallback (works in local file:// mode)
+            // Strategy 2: Fetch with Proxy Pipeline (Fallback channel)
             if (!jsonData || jsonData.length === 0) {
-                try {
-                    jsonData = await fetchGoogleSheetJSONP(TARGET_SHEET_ID, TARGET_SHEET_NAME);
-                } catch (jsonpErr) {
-                    console.error('JSONP failed:', jsonpErr);
+                for (let targetUrl of urls) {
+                    if (jsonData && jsonData.length > 0) break;
+                    for (let proxyFn of CORS_PROXIES) {
+                        try {
+                            const finalUrl = proxyFn(targetUrl);
+                            const response = await fetch(finalUrl);
+                            if (response.ok) {
+                                const csvText = await response.text();
+                                if (csvText && !csvText.trim().startsWith('<!DOCTYPE html>')) {
+                                    const workbook = XLSX.read(csvText, { type: 'string' });
+                                    const sheetName = workbook.SheetNames[0];
+                                    const worksheet = workbook.Sheets[sheetName];
+                                    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+                                    if (rows && rows.length > 0) {
+                                        jsonData = rows;
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (err) {
+                            // Silent retry next proxy
+                        }
+                    }
                 }
             }
 
@@ -611,17 +711,27 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
                     parseParsedRows(jsonData);
                     const now = new Date();
                     const timeStr = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-                    if (statusLabel) statusLabel.innerText = `已同步 MOVIE 工作表 (${timeStr})`;
+                    
+                    if (statusLabel) statusLabel.innerText = `已同步 MOVIE (${timeStr})`;
+                    if (syncDot) syncDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+                    if (syncBadge) syncBadge.className = 'hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-[11px] text-emerald-300';
+                    
                     if (showToast) showStatusNotification(`同步成功！已載入 ${jsonData.length} 筆觀影紀錄`, 'success');
                 } else {
-                    throw new Error('MOVIE 工作表中未發現有效的觀影資料。');
+                    throw new Error('未取得有效的觀影紀錄');
                 }
             } catch (err) {
-                console.error(err);
-                if (statusLabel) statusLabel.innerText = '雲端同步未完成';
-                if (showToast) showStatusNotification(err.message || '連線抓取失敗，請確認網路或試算表開啟狀態。', 'error');
-                
-                // Fallback to sample data if empty
+                console.warn('Sync failed:', err);
+                if (statusLabel) statusLabel.innerText = '同步未完成';
+                if (syncDot) syncDot.className = 'w-2 h-2 rounded-full bg-red-400';
+                if (syncBadge) syncBadge.className = 'hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-950/40 border border-red-800/50 text-[11px] text-red-300';
+
+                if (showToast) {
+                    const localHint = isLocalFile ? ' (於本機開啟時，請確保 Google 試算表存取權限已改為「知道連結的人皆可檢視」)' : '';
+                    showStatusNotification(`連線抓取失敗${localHint}。若問題持續，可點擊「匯入檔案 / 連結」上傳您的 .ods / .xlsx 檔案。`, 'error');
+                }
+
+                // Fallback to demo data if list is completely empty
                 if (rawRecords.length === 0) {
                     loadDemoData();
                 }
@@ -630,7 +740,18 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
             }
         }
 
-        // Smart Column Field Normalization
+        async function fetchGoogleSheet() {
+            const rawUrl = document.getElementById('googleSheetUrlInput').value.trim();
+            if (!rawUrl) {
+                showStatusNotification('請輸入 Google 試算表的連結網址！', 'error');
+                return;
+            }
+
+            showStatusNotification('正在連線抓取 Google 試算表資料...', 'info');
+            await syncMovieSheet(true);
+            closeImportModal();
+        }
+
         function normalizeRecord(row, index) {
             const keys = Object.keys(row);
             
@@ -650,7 +771,28 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
             const rawDate = getValue(['date', '觀影日期', '日期']);
             const titleOriginal = getValue(['title_original', '片名原名', '原名', '英文片名', 'titleoriginal', 'originaltitle']);
             const titleTW = getValue(['title', 'title_tw', '片名台灣譯名', '台灣譯名', '中文片名', '片名', 'titletw']) || titleOriginal || '未命名電影';
-            const directorActor = getValue(['director actor', 'directoractor', '導演演員', '導演、演員', 'director', 'actor', '導演', '演員']);
+            
+            // Separated Director & Cast fields with legacy fallback support
+            let directorStr = getValue(['director', '導演', '導演名稱']);
+            let castStr = getValue(['cast', 'actor', 'actors', '演員', '主要演員']);
+            const legacyDirectorActor = getValue(['director actor', 'directoractor', '導演演員', '導演、演員']);
+
+            if (!directorStr && !castStr && legacyDirectorActor) {
+                castStr = legacyDirectorActor;
+            }
+
+            // IMDB Field Parsing (Format tt2401878)
+            let imdbVal = getValue(['imdb', 'imdbid', 'imdb_id', 'tt', 'tt_id']);
+            if (imdbVal) {
+                imdbVal = imdbVal.trim();
+                // Clean formatting: if user only typed numeric ID like 2401878, prepend tt
+                if (/^\d+$/.test(imdbVal)) {
+                    imdbVal = 'tt' + imdbVal;
+                } else if (imdbVal.toLowerCase().startsWith('tt')) {
+                    imdbVal = imdbVal.toLowerCase();
+                }
+            }
+
             const source = getValue(['sourse', 'source', '觀影平台', '平台', '來源']) || '未標示平台';
 
             let rate = null;
@@ -662,7 +804,9 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
             }
 
             let formattedDate = formatDate(rawDate);
-            const people = directorActor ? directorActor.split(/[、,\/;]/).map(s => s.trim()).filter(Boolean) : [];
+            
+            const directors = directorStr ? directorStr.split(/[、,\/;]/).map(s => s.trim()).filter(Boolean) : [];
+            const cast = castStr ? castStr.split(/[、,\/;]/).map(s => s.trim()).filter(Boolean) : [];
 
             return {
                 id: rawNo ? parseInt(rawNo, 10) : index + 1,
@@ -670,8 +814,11 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
                 date: formattedDate,
                 titleOriginal: titleOriginal,
                 titleTW: titleTW,
-                directorActor: directorActor,
-                people: people,
+                directorStr: directorStr,
+                castStr: castStr,
+                directors: directors,
+                cast: cast,
+                imdb: imdbVal,
                 source: source
             };
         }
@@ -694,67 +841,8 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
             rawRecords = sampleData.map((row, idx) => normalizeRecord(row, idx));
             initPlatformsDropdown();
             applyFilters();
-            showStatusNotification('成功載入 12 筆示範觀影紀錄！', 'success');
         }
 
-        // Fetch Google Sheet Directly via Public CSV Endpoint
-        async function fetchGoogleSheet() {
-            const rawUrl = document.getElementById('googleSheetUrlInput').value.trim();
-            if (!rawUrl) {
-                showStatusNotification('請輸入 Google 試算表的連結網址！', 'error');
-                return;
-            }
-
-            // Extract Google Sheet ID from URL
-            const matches = rawUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-            if (!matches || !matches[1]) {
-                showStatusNotification('無效的 Google 試算表網址，請檢查格式。', 'error');
-                return;
-            }
-
-            const sheetId = matches[1];
-            
-            // Extract optional GID (sheet tab ID) if present
-            const gidMatch = rawUrl.match(/[#&?]gid=([0-9]+)/);
-            const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
-
-            // Construct Google Visualization CSV Endpoint URL
-            const csvExportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv${gidParam}`;
-
-            showStatusNotification('正在從 Google 試算表同步資料，請稍候...', 'info');
-
-            try {
-                const response = await fetch(csvExportUrl);
-                if (!response.ok) {
-                    throw new Error('無法存取試算表。請確定已將分享權限改為「知道連結的人皆可檢視」。');
-                }
-                const csvText = await response.text();
-
-                if (!csvText || csvText.trim().startsWith('<!DOCTYPE html>')) {
-                    throw new Error('存取被拒絕。請確保 Google 試算表開啟「知道連結的人皆可檢視」權限！');
-                }
-
-                // Parse CSV with SheetJS
-                const workbook = XLSX.read(csvText, { type: 'string' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-
-                if (jsonData && jsonData.length > 0) {
-                    parseParsedRows(jsonData);
-                    closeImportModal();
-                    showStatusNotification(`成功連結並匯入 ${jsonData.length} 筆 Google 試算表資料！`, 'success');
-                } else {
-                    showStatusNotification('試算表中未發現有效的電影資料列。', 'error');
-                }
-
-            } catch (err) {
-                console.error(err);
-                showStatusNotification(err.message || '連線抓取失敗，請確認網址與存取權限。', 'error');
-            }
-        }
-
-        // Import Modal Tab Switcher
         function switchImportTab(tab) {
             const googleTabBtn = document.getElementById('tabBtnGoogle');
             const fileTabBtn = document.getElementById('tabBtnFile');
@@ -822,7 +910,9 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
                     try {
                         const data = new Uint8Array(e.target.result);
                         const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                        
+                        let targetSheetName = workbook.SheetNames.find(n => n.toUpperCase() === TARGET_SHEET_NAME) || workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[targetSheetName];
                         const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
                         if (jsonData && jsonData.length > 0) {
@@ -863,7 +953,7 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
         }
 
         function parseParsedRows(rows) {
-            rawRecords = rows.map((r, i) => normalizeRecord(r, i));
+            rawRecords = rows.map((r, i) => normalizeRecord(r, i)).filter(r => r.titleTW && r.titleTW !== '未命名電影');
             initPlatformsDropdown();
             applyFilters();
             showStatusNotification(`成功匯入 ${rawRecords.length} 筆觀影紀錄！`, 'success');
@@ -896,8 +986,10 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
                 if (query) {
                     const matchTW = item.titleTW.toLowerCase().includes(query);
                     const matchOriginal = item.titleOriginal.toLowerCase().includes(query);
-                    const matchPeople = item.directorActor.toLowerCase().includes(query);
-                    if (!matchTW && !matchOriginal && !matchPeople) return false;
+                    const matchDirector = item.directorStr.toLowerCase().includes(query);
+                    const matchCast = item.castStr.toLowerCase().includes(query);
+                    const matchImdb = item.imdb ? item.imdb.toLowerCase().includes(query) : false;
+                    if (!matchTW && !matchOriginal && !matchDirector && !matchCast && !matchImdb) return false;
                 }
 
                 if (platform && item.source !== platform) return false;
@@ -933,11 +1025,19 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
         }
 
         function updateDashboardMetrics() {
-            const total = rawRecords.length;
-            const statTotalEl = document.getElementById('statTotal');
-            if (statTotalEl) statTotalEl.innerHTML = `${total} <span class="text-xs font-normal text-gray-400">部</span>`;
+            // 使用當前篩選後的紀錄進行動態計算
+            const recordsToUse = filteredRecords;
+            const total = recordsToUse.length;
+            const grandTotal = rawRecords.length;
+            const isFiltered = total !== grandTotal;
 
-            const ratedRecords = rawRecords.filter(r => r.rate !== null && !isNaN(r.rate));
+            const statTotalEl = document.getElementById('statTotal');
+            if (statTotalEl) {
+                const subLabel = isFiltered ? ` (總庫 ${grandTotal})` : '';
+                statTotalEl.innerHTML = `${total} <span class="text-xs font-normal text-gray-400">部${subLabel}</span>`;
+            }
+
+            const ratedRecords = recordsToUse.filter(r => r.rate !== null && !isNaN(r.rate));
             const avgRating = ratedRecords.length ? (ratedRecords.reduce((sum, r) => sum + r.rate, 0) / ratedRecords.length).toFixed(1) : '0.0';
             
             const statAvgRatingEl = document.getElementById('statAvgRating');
@@ -946,9 +1046,9 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
             const statRatedCountEl = document.getElementById('statRatedCount');
             if (statRatedCountEl) statRatedCountEl.innerText = `已評分電影 ${ratedRecords.length} 部 (${total ? Math.round((ratedRecords.length / total) * 100) : 0}%)`;
 
-            // Calculate Current Year Watch Count
+            // 計算篩選結果中的當前年份觀影數量
             const currentYear = new Date().getFullYear();
-            const currentYearRecords = rawRecords.filter(r => {
+            const currentYearRecords = recordsToUse.filter(r => {
                 if (!r.date || r.date === '無日期') return false;
                 const d = new Date(r.date);
                 return !isNaN(d.getTime()) && d.getFullYear() === currentYear;
@@ -958,21 +1058,36 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
             if (statCurrentYearCountEl) statCurrentYearCountEl.innerHTML = `${currentYearRecords.length} <span class="text-xs font-normal text-gray-400">部</span>`;
             
             const statCurrentYearSubEl = document.getElementById('statCurrentYearSub');
-            if (statCurrentYearSubEl) statCurrentYearSubEl.innerText = `${currentYear} 年度觀影累計`;
+            if (statCurrentYearSubEl) statCurrentYearSubEl.innerText = `${currentYear} 年度觀影紀錄`;
 
-            // Calculate Yearly Watch Counts for Chart
-            const yearlyCounts = {};
-            rawRecords.forEach(r => {
+            // 計算篩選結果中的年度趨勢 (自動補全所有中間年份與 0 觀影量年份)
+            const yearList = [];
+            recordsToUse.forEach(r => {
                 if (!r.date || r.date === '無日期') return;
                 const d = new Date(r.date);
                 if (!isNaN(d.getTime())) {
-                    const yr = d.getFullYear();
-                    yearlyCounts[yr] = (yearlyCounts[yr] || 0) + 1;
+                    yearList.push(d.getFullYear());
                 }
             });
 
+            const yearlyCounts = {};
+            if (yearList.length > 0) {
+                const minYear = Math.min(...yearList);
+                const maxYear = Math.max(...yearList, currentYear);
+                for (let y = minYear; y <= maxYear; y++) {
+                    yearlyCounts[y] = 0;
+                }
+                yearList.forEach(y => {
+                    yearlyCounts[y] = (yearlyCounts[y] || 0) + 1;
+                });
+            }
+
+            // 計算篩選結果中涵蓋的所有影人 (導演與演員)
             const allPeople = new Set();
-            rawRecords.forEach(r => r.people.forEach(p => allPeople.add(p)));
+            recordsToUse.forEach(r => {
+                r.directors.forEach(p => allPeople.add(p));
+                r.cast.forEach(p => allPeople.add(p));
+            });
             
             const statPeopleCountEl = document.getElementById('statPeopleCount');
             if (statPeopleCountEl) statPeopleCountEl.innerHTML = `${allPeople.size} <span class="text-xs font-normal text-gray-400">位</span>`;
@@ -989,7 +1104,6 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
                 const sortedYears = Object.keys(yearlyCounts).sort((a, b) => a - b);
                 const yearData = sortedYears.map(y => yearlyCounts[y]);
 
-                // Create Neon Gradient for Area Fill
                 const gradient = yearlyCtx.createLinearGradient(0, 0, 0, 180);
                 gradient.addColorStop(0, 'rgba(6, 182, 212, 0.45)');
                 gradient.addColorStop(1, 'rgba(6, 182, 212, 0.01)');
@@ -1030,10 +1144,10 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
                 const ratingCtx = ratingCanvas.getContext('2d');
                 if (ratingChart) ratingChart.destroy();
 
-                // Custom Bins: 10-9分, 8分, 7分, 6分, 5分以下 (Excluding unrated)
-                const ratingBins = { '10-9分': 0, '8分': 0, '7分': 0, '6分': 0, '5分以下': 0 };
+                const ratingBins = { '10分': 0, '9分': 0, '8分': 0, '7分': 0, '6分': 0, '5分以下': 0 };
                 ratedRecords.forEach(r => {
-                    if (r.rate === 10 || r.rate === 9) ratingBins['10-9分']++;
+                    if (r.rate === 10) ratingBins['10分']++;
+                    else if (r.rate === 9) ratingBins['9分']++;
                     else if (r.rate === 8) ratingBins['8分']++;
                     else if (r.rate === 7) ratingBins['7分']++;
                     else if (r.rate === 6) ratingBins['6分']++;
@@ -1082,31 +1196,60 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
                 const badgeClass = getPlatformBadgeStyle(item.source);
                 const rateStars = item.rate !== null ? `★ ${item.rate}` : '未評分';
 
+                // IMDb Badge Element (Icon Only)
+                const imdbBadge = item.imdb ? `
+                    <a href="https://www.imdb.com/title/${item.imdb}/" target="_blank" rel="noopener" 
+                       onclick="event.stopPropagation()" 
+                       title="開啟 IMDb 頁面 (${item.imdb})"
+                       class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/40 transition inline-flex items-center justify-center shadow-sm">
+                        <i class="fa-brands fa-imdb text-base"></i>
+                    </a>
+                ` : '';
+
                 return `
                     <div class="glass-card rounded-2xl p-4 flex flex-col justify-between cursor-pointer group" onclick="openDetailModal(${item.id})">
                         <div>
-                            <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center justify-between mb-2">
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${badgeClass}">
                                     ${item.source}
                                 </span>
-                                <span class="text-xs font-mono font-bold ${item.rate !== null ? 'text-amber-400 star-glow' : 'text-gray-500'}">
-                                    ${rateStars}
-                                </span>
+                                <div class="flex items-center gap-2">
+                                    ${imdbBadge}
+                                    <span class="text-xs font-mono font-bold ${item.rate !== null ? 'text-amber-400 star-glow' : 'text-gray-500'}">
+                                        ${rateStars}
+                                    </span>
+                                </div>
                             </div>
 
-                            <h3 class="text-base font-bold text-white group-hover:text-cinema-accent transition line-clamp-1">
+                            <h3 class="text-base font-bold text-white group-hover:text-cinema-accent transition line-clamp-1 mt-1">
                                 ${escapeHtml(item.titleTW)}
                             </h3>
                             ${item.titleOriginal ? `<p class="text-xs text-gray-400 italic line-clamp-1 mt-0.5 mb-3">${escapeHtml(item.titleOriginal)}</p>` : '<div class="mb-3"></div>'}
 
-                            <div class="flex flex-wrap gap-1 mb-4">
-                                ${item.people.slice(0, 3).map(p => `
-                                    <span onclick="event.stopPropagation(); filterByPerson('${escapeHtml(p)}')" 
-                                        class="px-2 py-0.5 bg-gray-800/80 hover:bg-red-950/80 hover:text-red-300 text-gray-400 rounded-md text-[10px] transition">
-                                        ${escapeHtml(p)}
-                                    </span>
-                                `).join('')}
-                                ${item.people.length > 3 ? `<span class="text-[10px] text-gray-500 self-center">+${item.people.length - 3}</span>` : ''}
+                            <!-- Director & Cast without icon & title -->
+                            <div class="space-y-1.5 mb-4">
+                                ${item.directors.length > 0 ? `
+                                    <div class="flex flex-wrap gap-1">
+                                        ${item.directors.map(d => `
+                                            <span onclick="event.stopPropagation(); filterByPerson('${escapeHtml(d)}')" 
+                                                class="px-1.5 py-0.5 bg-cyan-950/60 border border-cyan-800/50 hover:bg-cyan-900 text-cyan-200 rounded text-[10px] transition">
+                                                ${escapeHtml(d)}
+                                            </span>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+
+                                ${item.cast.length > 0 ? `
+                                    <div class="flex flex-wrap gap-1">
+                                        ${item.cast.slice(0, 3).map(p => `
+                                            <span onclick="event.stopPropagation(); filterByPerson('${escapeHtml(p)}')" 
+                                                class="px-1.5 py-0.5 bg-gray-800 hover:bg-red-950/80 hover:text-red-300 text-gray-300 rounded text-[10px] transition">
+                                                ${escapeHtml(p)}
+                                            </span>
+                                        `).join('')}
+                                        ${item.cast.length > 3 ? `<span class="text-[10px] text-gray-500 self-center">+${item.cast.length - 3}</span>` : ''}
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
 
@@ -1120,29 +1263,51 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
 
             tableBody.innerHTML = filteredRecords.map(item => {
                 const badgeClass = getPlatformBadgeStyle(item.source);
+                const imdbBtn = item.imdb ? `
+                    <a href="https://www.imdb.com/title/${item.imdb}/" target="_blank" rel="noopener" 
+                       onclick="event.stopPropagation()" 
+                       title="開啟 IMDb (${item.imdb})"
+                       class="p-1 rounded bg-amber-500/20 text-amber-400 hover:bg-amber-500/40 transition inline-flex items-center justify-center">
+                        <i class="fa-brands fa-imdb text-base"></i>
+                    </a>
+                ` : '-';
+
                 return `
                     <tr class="hover:bg-gray-800/40 transition cursor-pointer" onclick="openDetailModal(${item.id})">
-                        <td class="py-3 px-4 font-mono text-gray-500">#${item.id}</td>
-                        <td class="py-3 px-4 text-gray-400 whitespace-nowrap">${item.date}</td>
-                        <td class="py-3 px-4 font-bold text-white">${escapeHtml(item.titleTW)}</td>
-                        <td class="py-3 px-4 text-gray-400 italic">${escapeHtml(item.titleOriginal || '-')}</td>
-                        <td class="py-3 px-4 font-bold ${item.rate !== null ? 'text-amber-400' : 'text-gray-600'}">
+                        <td class="py-3 px-3 font-mono text-gray-500">#${item.id}</td>
+                        <td class="py-3 px-3 text-gray-400 whitespace-nowrap">${item.date}</td>
+                        <td class="py-3 px-3 font-bold text-white">${escapeHtml(item.titleTW)}</td>
+                        <td class="py-3 px-3 text-gray-400 italic">${escapeHtml(item.titleOriginal || '-')}</td>
+                        <td class="py-3 px-3 font-bold ${item.rate !== null ? 'text-amber-400' : 'text-gray-600'}">
                             ${item.rate !== null ? `★ ${item.rate}` : '-'}
                         </td>
-                        <td class="py-3 px-4">
+                        <td class="py-3 px-3">
                             <div class="flex flex-wrap gap-1">
-                                ${item.people.map(p => `
+                                ${item.directors.length ? item.directors.map(d => `
+                                    <span onclick="event.stopPropagation(); filterByPerson('${escapeHtml(d)}')" 
+                                        class="px-1.5 py-0.5 bg-cyan-950/60 text-cyan-300 hover:text-white rounded text-[10px]">
+                                        ${escapeHtml(d)}
+                                    </span>
+                                `).join('') : '<span class="text-gray-600">-</span>'}
+                            </div>
+                        </td>
+                        <td class="py-3 px-3">
+                            <div class="flex flex-wrap gap-1">
+                                ${item.cast.length ? item.cast.map(p => `
                                     <span onclick="event.stopPropagation(); filterByPerson('${escapeHtml(p)}')" 
                                         class="px-1.5 py-0.5 bg-gray-800 text-gray-300 hover:text-white rounded text-[10px]">
                                         ${escapeHtml(p)}
                                     </span>
-                                `).join('')}
+                                `).join('') : '<span class="text-gray-600">-</span>'}
                             </div>
                         </td>
-                        <td class="py-3 px-4">
+                        <td class="py-3 px-3">
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${badgeClass}">
                                 ${item.source}
                             </span>
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            ${imdbBtn}
                         </td>
                     </tr>
                 `;
@@ -1186,7 +1351,7 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
             document.getElementById('platformFilter').value = '';
             document.getElementById('ratingFilter').value = '';
             document.getElementById('startDateInput').value = '';
-            document.getElementById('endDateInput').value = me = '';
+            document.getElementById('endDateInput').value = '';
             document.getElementById('sortBySelect').value = 'date-desc';
             applyFilters();
         }
@@ -1201,13 +1366,13 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
             if (mode === 'grid') {
                 gridContainer.classList.remove('hidden');
                 tableContainer.classList.add('hidden');
-                viewGridBtn.className = 'px-3 py-1 rounded-md text-white bg-cinema-accent text-xs font-semibold flex items-center gap-1.5 transition';
-                viewTableBtn.className = 'px-3 py-1 rounded-md text-gray-400 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition';
+                viewGridBtn.className = 'p-2 rounded-md text-white bg-cinema-accent text-xs font-semibold flex items-center transition';
+                viewTableBtn.className = 'p-2 rounded-md text-gray-400 hover:text-white text-xs font-semibold flex items-center transition';
             } else {
                 gridContainer.classList.add('hidden');
                 tableContainer.classList.remove('hidden');
-                viewTableBtn.className = 'px-3 py-1 rounded-md text-white bg-cinema-accent text-xs font-semibold flex items-center gap-1.5 transition';
-                viewGridBtn.className = 'px-3 py-1 rounded-md text-gray-400 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition';
+                viewTableBtn.className = 'p-2 rounded-md text-white bg-cinema-accent text-xs font-semibold flex items-center transition';
+                viewGridBtn.className = 'p-2 rounded-md text-gray-400 hover:text-white text-xs font-semibold flex items-center transition';
             }
         }
 
@@ -1239,16 +1404,44 @@ NO	RATE	Date	Title_Original	Title	Director actor	Sourse
             document.getElementById('detailRate').innerText = item.rate !== null ? `★ ${item.rate} / 10` : '未評分';
             document.getElementById('detailDate').innerText = item.date;
 
-            const peopleContainer = document.getElementById('detailPeopleList');
-            if (item.people.length > 0) {
-                peopleContainer.innerHTML = item.people.map(p => `
+            // IMDb Link in Detail Modal (Icon Only)
+            const imdbContainer = document.getElementById('detailImdbLinkContainer');
+            if (item.imdb) {
+                imdbContainer.innerHTML = `
+                    <a href="https://www.imdb.com/title/${item.imdb}/" target="_blank" rel="noopener" 
+                       title="開啟 IMDb (${item.imdb})"
+                       class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/40 text-xs hover:bg-amber-500/30 transition flex items-center justify-center">
+                        <i class="fa-brands fa-imdb text-xl"></i>
+                    </a>
+                `;
+            } else {
+                imdbContainer.innerHTML = '';
+            }
+
+            // Render Directors separately
+            const directorContainer = document.getElementById('detailDirectorList');
+            if (item.directors.length > 0) {
+                directorContainer.innerHTML = item.directors.map(d => `
+                    <span onclick="filterByPerson('${escapeHtml(d)}'); closeDetailModal();" 
+                        class="px-2.5 py-1 bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cinema-accent hover:text-white text-xs rounded-lg cursor-pointer transition">
+                        ${escapeHtml(d)}
+                    </span>
+                `).join('');
+            } else {
+                directorContainer.innerHTML = '<span class="text-xs text-gray-500 italic">未記載導演資訊</span>';
+            }
+
+            // Render Cast separately
+            const castContainer = document.getElementById('detailCastList');
+            if (item.cast.length > 0) {
+                castContainer.innerHTML = item.cast.map(p => `
                     <span onclick="filterByPerson('${escapeHtml(p)}'); closeDetailModal();" 
                         class="px-2.5 py-1 bg-gray-800 hover:bg-cinema-accent text-gray-200 text-xs rounded-lg cursor-pointer transition">
                         ${escapeHtml(p)}
                     </span>
                 `).join('');
             } else {
-                peopleContainer.innerHTML = '<span class="text-xs text-gray-500 italic">未記載影人資訊</span>';
+                castContainer.innerHTML = '<span class="text-xs text-gray-500 italic">未記載演員資訊</span>';
             }
 
             document.getElementById('detailModal').classList.remove('hidden');
