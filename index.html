@@ -1,10 +1,17 @@
+<!-- 
+  ========================================
+  專案名稱：Cinefolio 電影誌
+  檔案版本：v3
+  更新日期：2026-08-06
+  ========================================
+-->
 <!DOCTYPE html>
 <html lang="zh-TW" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cinefolio 電影誌 | 收藏每一部電影，探索自己的電影世界</title>
-    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='%23f59e0b' d='M448 32H64C28.65 32 0 60.65 0 96v320c0 35.35 28.65 64 64 64h384c35.35 0 64-28.65 64-64V96c0-35.35-28.65-64-64-64zm-16 64v32L304 32h64c17.67 0 32 14.33 32 32zm-160-64l128 96H272L144 32h128zM64 64h16l128 96H80L64 148V64zm384 320c0 17.67-14.33 32-32 32H64c-17.67 0-32-14.33-32-32V192h448v192z'/></svg>">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -119,9 +126,9 @@
             
             <!-- Brand Logo -->
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 via-orange-500/20 to-red-500/20 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-500/20">
-                    <i class="fa-solid fa-clapperboard text-xl text-amber-400"></i>
-                </div>
+                <div class="flex items-center justify-center shrink-0">
+    <i class="fa-solid fa-clapperboard text-amber-400 text-2xl"></i>
+</div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-wider text-white">
                         Cinefolio <span class="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent font-black">電影誌</span>
@@ -130,21 +137,21 @@
                 </div>
             </div>
 
-            <!-- Action Buttons & Auto Sync Status -->
-            <div class="flex items-center space-x-3">
-                <div id="syncBadge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-[11px] text-emerald-300">
-                    <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span id="syncStatusLabel">連結 MOVIE 工作表中...</span>
-                </div>
-                <button id="importModalBtn" onclick="openImportModal()" class="px-3.5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs text-gray-200 font-semibold transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-import text-xs text-amber-400"></i>
-                    <span>匯入檔案 / 連結</span>
-                </button>
-                <button id="syncBtn" onclick="syncMovieSheet(true)" class="px-3.5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-xs text-white font-semibold transition flex items-center gap-1.5 shadow-md shadow-emerald-900/30">
-                    <i id="syncIcon" class="fa-solid fa-rotate text-xs"></i>
-                    <span>同步最新紀錄</span>
-                </button>
-            </div>
+           <!-- Action Buttons & Auto Sync Status -->
+          <div class="flex items-center space-x-2 sm:space-x-3">
+              <div id="syncBadge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-[11px] text-emerald-300">
+                  <span id="syncDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span id="syncStatusLabel">連結 MOVIE 工作表中...</span>
+              </div>
+              <button id="importModalBtn" onclick="openImportModal()" title="匯入檔案 / 連結" class="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs text-gray-200 font-semibold transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-file-import text-xs text-amber-400"></i>
+                  <span class="hidden sm:inline">匯入檔案 / 連結</span>
+              </button>
+              <button id="syncBtn" onclick="syncMovieSheet(true)" title="同步最新紀錄" class="px-3 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-xs text-white font-semibold transition flex items-center gap-1.5 shadow-md shadow-emerald-900/30">
+                  <i id="syncIcon" class="fa-solid fa-rotate text-xs"></i>
+                  <span class="hidden sm:inline">同步最新紀錄</span>
+              </button>
+          </div>
         </div>
     </header>
 
@@ -238,8 +245,8 @@
                 
                 <div class="md:col-span-4 relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" id="searchInput" oninput="applyFilters()" placeholder="搜尋片名 (TW/原名)、導演或演員..." 
-                        class="w-full pl-10 pr-9 py-2 bg-gray-900/80 border border-gray-700/80 rounded-xl text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-cinema-accent focus:ring-1 focus:ring-cinema-accent transition">
+                   <input type="text" id="searchInput" oninput="debouncedApplyFilters()" placeholder="搜尋片名 (TW/原名)、導演或演員..." 
+    class="w-full pl-10 pr-9 py-2 bg-gray-900/80 border border-gray-700/80 rounded-xl text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-cinema-accent focus:ring-1 focus:ring-cinema-accent transition">
                     <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-xs">
                         <i class="fa-solid fa-circle-xmark"></i>
                     </button>
@@ -359,7 +366,7 @@
 
     <!-- Footer -->
     <footer class="mt-auto border-t border-gray-800/80 py-6 text-center text-xs text-gray-500">
-        <p>Cinefolio Engine © 2026 | 支援 Google 試算表、.ODS / .XLSX / .CSV 智慧欄位比對與影人索引解析</p>
+        <p>Cinefolio Engine © 2026</p>
     </footer>
 
     <div id="importModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
@@ -971,7 +978,14 @@ NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
                 select.appendChild(opt);
             });
         }
-
+// 新增防抖 (Debounce) 機制
+      let searchTimer = null;
+      function debouncedApplyFilters() {
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(() => {
+              applyFilters();
+          }, 250);
+      }
         function applyFilters() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             const platform = document.getElementById('platformFilter').value;
@@ -1154,17 +1168,17 @@ NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
                     else if (r.rate !== null && r.rate <= 5) ratingBins['5分以下']++;
                 });
 
-                ratingChart = new Chart(ratingCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: Object.keys(ratingBins),
-                        datasets: [{
-                            label: '電影數量',
-                            data: Object.values(ratingBins),
-                            backgroundColor: '#f59e0b',
-                            borderRadius: 6
-                        }]
-                    },
+               ratingChart = new Chart(ratingCtx, {
+                  type: 'bar',
+                  data: {
+                      labels: Object.keys(ratingBins),
+                      datasets: [{
+                          label: '電影數量',
+                          data: Object.values(ratingBins),
+                          backgroundColor: '#f59e0b',
+                          borderRadius: 6
+                      }]
+                  },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
@@ -1418,18 +1432,23 @@ NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
                 imdbContainer.innerHTML = '';
             }
 
-            // Render Directors separately
-            const directorContainer = document.getElementById('detailDirectorList');
-            if (item.directors.length > 0) {
-                directorContainer.innerHTML = item.directors.map(d => `
-                    <span onclick="filterByPerson('${escapeHtml(d)}'); closeDetailModal();" 
-                        class="px-2.5 py-1 bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cinema-accent hover:text-white text-xs rounded-lg cursor-pointer transition">
-                        ${escapeHtml(d)}
-                    </span>
-                `).join('');
-            } else {
-                directorContainer.innerHTML = '<span class="text-xs text-gray-500 italic">未記載導演資訊</span>';
-            }
+          // Render Directors separately (安全修復版)
+          const directorContainer = document.getElementById('detailDirectorList');
+          directorContainer.innerHTML = ''; // 清空舊內容
+          if (item.directors.length > 0) {
+              item.directors.forEach(d => {
+                  const span = document.createElement('span');
+                  span.className = "px-2.5 py-1 bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cinema-accent hover:text-white text-xs rounded-lg cursor-pointer transition";
+                  span.textContent = d;
+                  span.onclick = () => {
+                      filterByPerson(d);
+                      closeDetailModal();
+                  };
+                  directorContainer.appendChild(span);
+              });
+          } else {
+              directorContainer.innerHTML = '<span class="text-xs text-gray-500 italic">未記載導演資訊</span>';
+          }
 
             // Render Cast separately
             const castContainer = document.getElementById('detailCastList');
