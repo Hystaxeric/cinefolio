@@ -527,16 +527,41 @@ NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
             { NO: 5, RATE: 7, Date: '2026-02-14', Title_Original: 'The Dark Knight', Title: '黑暗騎士', Director: '克里斯多福·諾蘭', Cast: '克里斯汀·貝爾、希斯·萊傑', IMDB: 'tt0468569', Sourse: 'HBO Go' }
         ];
 
-        window.addEventListener('DOMContentLoaded', () => {
-            setupDragAndDrop();
-            
-            // Set default URL input field value
-            const urlInput = document.getElementById('googleSheetUrlInput');
-            if (urlInput) urlInput.value = DEFAULT_PUBLISHED_URL;
+window.addEventListener('DOMContentLoaded', () => {
+    setupDragAndDrop();
+    
+    // Set default URL input field value
+    const urlInput = document.getElementById('googleSheetUrlInput');
+    if (urlInput) urlInput.value = DEFAULT_PUBLISHED_URL;
 
-            // Automatically sync upon page load
-            syncMovieSheet(false);
-        });
+    // 優先從本地快取 (localStorage) 讀取資料（加上安全保護）
+    let hasValidCache = false;
+    try {
+        const cachedData = localStorage.getItem('cinefolio_movie_cache');
+        const cachedTime = localStorage.getItem('cinefolio_cache_time');
+
+        if (cachedData) {
+            const parsedData = JSON.parse(cachedData);
+            if (Array.isArray(parsedData) && parsedData.length > 0) {
+                parseParsedRows(parsedData);
+                
+                const statusLabel = document.getElementById('syncStatusLabel');
+                if (statusLabel) {
+                    statusLabel.innerText = `已載入快取 (${cachedTime || '本地'})`;
+                }
+                hasValidCache = true;
+            }
+        }
+    } catch (e) {
+        console.warn('無法存取或讀取 LocalStorage 快取：', e);
+        hasValidCache = false;
+    }
+
+    // 若完全沒有有效快取（或無權限存取），則進行連線同步
+    if (!hasValidCache) {
+        syncMovieSheet(false);
+    }
+});
 
         // Resolve Sheet URLs for both Published (/d/e/2PACX...) and Standard (/d/SHEET_ID) Links
         function resolveSheetUrls(inputUrlOrId) {
@@ -669,7 +694,7 @@ NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
             let jsonData = null;
             const isLocalFile = window.location.protocol === 'file:';
 
-            // Strategy 1: JSONP Channel (Primary for local file:// mode to bypass CORS)
+            // 策略 1: 使用 JSONP 通道（解決雙擊開啟 .html 本地檔案時的 CORS 跨域限制）
             for (let path of jsonpCandidatePaths) {
                 if (jsonData && jsonData.length > 0) break;
                 try {
@@ -679,13 +704,11 @@ NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
                     try {
                         jsonData = await fetchGoogleSheetJSONP(path, '');
                         if (jsonData && jsonData.length > 0) break;
-                    } catch (e2) {
-                        // Continue to strategy 2
-                    }
+                    } catch (e2) {}
                 }
             }
 
-            // Strategy 2: Fetch with Proxy Pipeline (Fallback channel)
+            // 策略 2: 使用 Proxy 代理伺服器管道
             if (!jsonData || jsonData.length === 0) {
                 for (let targetUrl of urls) {
                     if (jsonData && jsonData.length > 0) break;
@@ -706,9 +729,7 @@ NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
                                     }
                                 }
                             }
-                        } catch (err) {
-                            // Silent retry next proxy
-                        }
+                        } catch (err) {}
                     }
                 }
             }
@@ -719,6 +740,13 @@ NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
                     const now = new Date();
                     const timeStr = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
                     
+                    try {
+                        localStorage.setItem('cinefolio_movie_cache', JSON.stringify(jsonData));
+                        localStorage.setItem('cinefolio_cache_time', timeStr);
+                    } catch (cacheErr) {
+                        console.warn('寫入 LocalStorage 快取失敗：', cacheErr);
+                    }
+
                     if (statusLabel) statusLabel.innerText = `已同步 MOVIE (${timeStr})`;
                     if (syncDot) syncDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
                     if (syncBadge) syncBadge.className = 'hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-[11px] text-emerald-300';
@@ -738,14 +766,13 @@ NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
                     showStatusNotification(`連線抓取失敗${localHint}。若問題持續，可點擊「匯入檔案 / 連結」上傳您的 .ods / .xlsx 檔案。`, 'error');
                 }
 
-                // Fallback to demo data if list is completely empty
                 if (rawRecords.length === 0) {
                     loadDemoData();
                 }
             } finally {
                 if (syncIcon) syncIcon.classList.remove('fa-spin');
             }
-        }
+        } // <--- 補回此處的關閉大括號，語法便恢復正常！
 
         async function fetchGoogleSheet() {
             const rawUrl = document.getElementById('googleSheetUrlInput').value.trim();
