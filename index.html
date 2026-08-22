@@ -1,8 +1,9 @@
 <!-- 
   ========================================
   專案名稱：Cinefolio 電影誌
-  檔案版本：v3
-  更新日期：2026-08-06
+  檔案版本：v3.6
+  更新日期：2026-08-22
+  新增資料欄位
   ========================================
 -->
 <!DOCTYPE html>
@@ -39,7 +40,7 @@
     </script>
     
     <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
     <!-- SheetJS for parsing XLSX, ODS, CSV -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -528,7 +529,7 @@ NO	RATE	Date	Title_Original	Title	Director	Cast	IMDB	Sourse
         ];
 
 window.addEventListener('DOMContentLoaded', () => {
-    setupDragAndDrop();
+
     
     // Set default URL input field value
     const urlInput = document.getElementById('googleSheetUrlInput');
@@ -679,7 +680,7 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        async function syncMovieSheet(showToast = false) {
+     async function syncMovieSheet(showToast = false) {
             const syncIcon = document.getElementById('syncIcon');
             const statusLabel = document.getElementById('syncStatusLabel');
             const syncBadge = document.getElementById('syncBadge');
@@ -694,7 +695,7 @@ window.addEventListener('DOMContentLoaded', () => {
             let jsonData = null;
             const isLocalFile = window.location.protocol === 'file:';
 
-            // 策略 1: 使用 JSONP 通道（解決雙擊開啟 .html 本地檔案時的 CORS 跨域限制）
+            // 策略 1: 使用 JSONP 通道
             for (let path of jsonpCandidatePaths) {
                 if (jsonData && jsonData.length > 0) break;
                 try {
@@ -772,7 +773,7 @@ window.addEventListener('DOMContentLoaded', () => {
             } finally {
                 if (syncIcon) syncIcon.classList.remove('fa-spin');
             }
-        } // <--- 補回此處的關閉大括號，語法便恢復正常！
+        }
 
         async function fetchGoogleSheet() {
             const rawUrl = document.getElementById('googleSheetUrlInput').value.trim();
@@ -786,233 +787,108 @@ window.addEventListener('DOMContentLoaded', () => {
             closeImportModal();
         }
 
-        function normalizeRecord(row, index) {
-            const keys = Object.keys(row);
-            
-            const getValue = (patterns) => {
-                for (let p of patterns) {
-                    const cleanP = p.toLowerCase().replace(/[\_\s\-]/g, '');
-                    const foundKey = keys.find(k => k.trim().toLowerCase().replace(/[\_\s\-]/g, '') === cleanP);
-                    if (foundKey && row[foundKey] !== undefined && row[foundKey] !== null) {
-                        return String(row[foundKey]).trim();
-                    }
-                }
-                return '';
-            };
-
-            const rawNo = getValue(['no', '序號', 'id']);
-            const rawRate = getValue(['rate', '評分', 'rating', '分數']);
-            const rawDate = getValue(['date', '觀影日期', '日期']);
-            const titleOriginal = getValue(['title_original', '片名原名', '原名', '英文片名', 'titleoriginal', 'originaltitle']);
-            const titleTW = getValue(['title', 'title_tw', '片名台灣譯名', '台灣譯名', '中文片名', '片名', 'titletw']) || titleOriginal || '未命名電影';
-            
-            // Separated Director & Cast fields with legacy fallback support
-            let directorStr = getValue(['director', '導演', '導演名稱']);
-            let castStr = getValue(['cast', 'actor', 'actors', '演員', '主要演員']);
-            const legacyDirectorActor = getValue(['director actor', 'directoractor', '導演演員', '導演、演員']);
-
-            if (!directorStr && !castStr && legacyDirectorActor) {
-                castStr = legacyDirectorActor;
-            }
-
-            // IMDB Field Parsing (Format tt2401878)
-            let imdbVal = getValue(['imdb', 'imdbid', 'imdb_id', 'tt', 'tt_id']);
-            if (imdbVal) {
-                imdbVal = imdbVal.trim();
-                // Clean formatting: if user only typed numeric ID like 2401878, prepend tt
-                if (/^\d+$/.test(imdbVal)) {
-                    imdbVal = 'tt' + imdbVal;
-                } else if (imdbVal.toLowerCase().startsWith('tt')) {
-                    imdbVal = imdbVal.toLowerCase();
-                }
-            }
-
-            const source = getValue(['sourse', 'source', '觀影平台', '平台', '來源']) || '未標示平台';
-
-            let rate = null;
-            if (rawRate !== '' && !isNaN(parseFloat(rawRate))) {
-                let parsed = Math.round(parseFloat(rawRate));
-                if (parsed > 10) parsed = 10;
-                if (parsed < 1) parsed = 1;
-                rate = parsed;
-            }
-
-            let formattedDate = formatDate(rawDate);
-            
-            const directors = directorStr ? directorStr.split(/[、,\/;]/).map(s => s.trim()).filter(Boolean) : [];
-            const cast = castStr ? castStr.split(/[、,\/;]/).map(s => s.trim()).filter(Boolean) : [];
-
-            return {
-                id: rawNo ? parseInt(rawNo, 10) : index + 1,
-                rate: rate,
-                date: formattedDate,
-                titleOriginal: titleOriginal,
-                titleTW: titleTW,
-                directorStr: directorStr,
-                castStr: castStr,
-                directors: directors,
-                cast: cast,
-                imdb: imdbVal,
-                source: source
-            };
-        }
-
-        function formatDate(val) {
-            if (!val) return '無日期';
-            if (typeof val === 'number' || (!isNaN(val) && Number(val) > 30000 && Number(val) < 60000)) {
-                const date = new Date(Math.round((Number(val) - 25569) * 86400 * 1000));
-                return date.toISOString().split('T')[0];
-            }
-            const strStr = String(val).replace(/\//g, '-').trim();
-            const d = new Date(strStr);
-            if (!isNaN(d.getTime())) {
-                return d.toISOString().split('T')[0];
-            }
-            return strStr;
-        }
-
-        function loadDemoData() {
-            rawRecords = sampleData.map((row, idx) => normalizeRecord(row, idx));
-            initPlatformsDropdown();
-            applyFilters();
-        }
-
-        function switchImportTab(tab) {
-            const googleTabBtn = document.getElementById('tabBtnGoogle');
-            const fileTabBtn = document.getElementById('tabBtnFile');
-            const googlePanel = document.getElementById('tabPanelGoogle');
-            const filePanel = document.getElementById('tabPanelFile');
-
-            if (tab === 'google') {
-                googleTabBtn.className = 'pb-2 border-b-2 border-cinema-accent text-white font-bold flex items-center gap-1.5';
-                fileTabBtn.className = 'pb-2 text-gray-400 hover:text-gray-200 border-b-2 border-transparent flex items-center gap-1.5';
-                googlePanel.classList.remove('hidden');
-                filePanel.classList.add('hidden');
-            } else {
-                fileTabBtn.className = 'pb-2 border-b-2 border-cinema-accent text-white font-bold flex items-center gap-1.5';
-                googleTabBtn.className = 'pb-2 text-gray-400 hover:text-gray-200 border-b-2 border-transparent flex items-center gap-1.5';
-                filePanel.classList.remove('hidden');
-                googlePanel.classList.add('hidden');
-            }
-        }
-
-        function setupDragAndDrop() {
-            const dropzone = document.getElementById('dropzone');
-
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
-            });
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => dropzone.classList.add('border-cinema-accent', 'bg-red-950/20'), false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => dropzone.classList.remove('border-cinema-accent', 'bg-red-950/20'), false);
-            });
-
-            dropzone.addEventListener('drop', (e) => {
-                const files = e.dataTransfer.files;
-                if (files.length) processFile(files[0]);
-            });
-        }
-
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (file) processFile(file);
-        }
-
-        function processFile(file) {
-            const reader = new FileReader();
-            const fileName = file.name.toLowerCase();
-
-            showStatusNotification(`正在解析檔案 ${file.name}...`, 'info');
-
-            if (fileName.endsWith('.json')) {
-                reader.onload = (e) => {
-                    try {
-                        const json = JSON.parse(e.target.result);
-                        parseParsedRows(Array.isArray(json) ? json : [json]);
-                        closeImportModal();
-                    } catch (err) {
-                        showStatusNotification('JSON 格式錯誤！', 'error');
-                    }
-                };
-                reader.readAsText(file);
-            } else {
-                reader.onload = (e) => {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                        
-                        let targetSheetName = workbook.SheetNames.find(n => n.toUpperCase() === TARGET_SHEET_NAME) || workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[targetSheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-
-                        if (jsonData && jsonData.length > 0) {
-                            parseParsedRows(jsonData);
-                            closeImportModal();
-                        } else {
-                            showStatusNotification('此檔案內沒有發現有效的表格資料！', 'error');
-                        }
-                    } catch (err) {
-                        showStatusNotification('解析檔案失敗，請確保為有效的 .ods, .xlsx 或 .csv 檔案！', 'error');
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        }
-
-        function processPastedText() {
-            const text = document.getElementById('pasteTextarea').value.trim();
-            if (!text) {
-                showStatusNotification('請先貼上有效的文本內容！', 'error');
-                return;
-            }
-
-            try {
-                const workbook = XLSX.read(text, { type: 'string' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-
-                if (jsonData && jsonData.length > 0) {
-                    parseParsedRows(jsonData);
-                    closeImportModal();
-                } else {
-                    showStatusNotification('無法解析貼上的文字內容！', 'error');
-                }
-            } catch (err) {
-                showStatusNotification('解析失敗，請確認為 Tab 分隔或 CSV 格式。', 'error');
-            }
-        }
-
         function parseParsedRows(rows) {
-            rawRecords = rows.map((r, i) => normalizeRecord(r, i)).filter(r => r.titleTW && r.titleTW !== '未命名電影');
-            initPlatformsDropdown();
+            rawRecords = rows.map((row, idx) => normalizeRecord(row, idx)).filter(Boolean);
             applyFilters();
-            showStatusNotification(`成功匯入 ${rawRecords.length} 筆觀影紀錄！`, 'success');
         }
 
-        function initPlatformsDropdown() {
-            const select = document.getElementById('platformFilter');
-            const platforms = Array.from(new Set(rawRecords.map(r => r.source))).filter(Boolean);
-            
-            select.innerHTML = '<option value="">全部平台 (All Sources)</option>';
-            platforms.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p;
-                opt.textContent = p;
-                select.appendChild(opt);
-            });
+    function normalizeRecord(row, index) {
+    const getVal = (keys) => {
+        for (let k of keys) {
+            const foundKey = Object.keys(row).find(rk => rk.trim().toLowerCase() === k.toLowerCase());
+            if (foundKey && row[foundKey] !== undefined && row[foundKey] !== '') {
+                return row[foundKey];
+            }
         }
-// 新增防抖 (Debounce) 機制
-      let searchTimer = null;
-      function debouncedApplyFilters() {
-          clearTimeout(searchTimer);
-          searchTimer = setTimeout(() => {
-              applyFilters();
-          }, 250);
-      }
+        return '';
+    };
+
+    // 1. 補上 no 變數的定義與讀取 logic
+    const rawNo = getVal(['NO', 'No', 'no', '編號', '序號']);
+    const no = rawNo ? String(rawNo).trim() : String(index + 1);
+
+    const rawTitleTW = getVal(['電影中文名稱', '中文片名', '中文名稱', '片名', 'TitleTW', 'Title_TW', 'Title']);
+    const rawTitleOriginal = getVal(['原文片名', '原名', '英文名稱', 'TitleOriginal', 'Title_Original', 'Original Title','Title_International']);
+    
+    if (!rawTitleTW && !rawTitleOriginal) return null;
+
+    const titleTW = String(rawTitleTW || rawTitleOriginal).trim();
+    const titleOriginal = String(rawTitleOriginal || '').trim();
+
+    const rawDate = getVal(['日期', '觀看日期', 'Date', 'Watch Date']);
+    let dateStr = '無日期';
+    if (rawDate) {
+        if (typeof rawDate === 'number') {
+            const dateObj = XLSX.SSF.parse_date_code(rawDate);
+            if (dateObj) {
+                const m = String(dateObj.m).padStart(2, '0');
+                const d = String(dateObj.d).padStart(2, '0');
+                dateStr = `${dateObj.y}-${m}-${d}`;
+            }
+        } else {
+            const str = String(rawDate).trim();
+            const matched = str.match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+            if (matched) {
+                dateStr = `${matched[1]}-${matched[2].padStart(2, '0')}-${matched[3].padStart(2, '0')}`;
+            } else {
+                dateStr = str;
+            }
+        }
+    }
+
+    const rawRate = getVal(['評分', '個人評分', 'Rating', 'Score', 'Rate']);
+    let rate = null;
+    if (rawRate !== '') {
+        const parsed = parseFloat(rawRate);
+        if (!isNaN(parsed)) rate = parsed;
+    }
+
+    const source = String(getVal(['管道/平台', '管道', '平台', 'Platform', 'Source', 'Where', 'Sourse'])).trim() || '未標示';
+    const imdb = String(getVal(['IMDB', 'IMDb', 'IMDb ID', 'IMDb Link'])).trim();
+    const releaseYear = String(getVal(['上映年份', '年份', 'Year', 'Release Year'])).trim();
+    
+    const countryStr = String(getVal(['出品國', '國家', 'Country'])).trim();
+    const countries = countryStr ? countryStr.split(/[,/、]+/).map(c => c.trim()).filter(Boolean) : [];
+    
+    const languageStr = String(getVal(['語言', 'Language'])).trim();
+    const languages = languageStr ? languageStr.split(/[,/、]+/).map(l => l.trim()).filter(Boolean) : [];
+
+    const genreStr = String(getVal(['類型', 'Genre', 'Genres'])).trim();
+    const genres = genreStr ? genreStr.split(/[,/、]+/).map(g => g.trim()).filter(Boolean) : [];
+    
+    const runtime = String(getVal(['片長', '片長(分)', 'Runtime', 'Duration'])).trim();
+    const imdbRating = String(getVal(['IMDb評分', 'IMDB_Rating', 'IMDB Rating'])).trim();
+
+    const directorStr = String(getVal(['導演', 'Director'])).trim();
+    const directors = directorStr ? directorStr.split(/[,/、]+/).map(d => d.trim()).filter(Boolean) : [];
+    
+    const castStr = String(getVal(['主演', '演員', 'Cast', 'Actors'])).trim();
+    const cast = castStr ? castStr.split(/[,/、]+/).map(c => c.trim()).filter(Boolean) : [];
+
+    return {
+        no,
+        titleTW,
+        titleOriginal,
+        date: dateStr,
+        rate,
+        source,
+        imdb,
+        releaseYear,
+        countryStr,
+		countries,
+        languageStr,
+		languages,
+        genreStr,
+        genres,
+        runtime,
+        imdbRating,
+        directorStr,
+        directors,
+        castStr,
+        cast
+    };
+}
+
         function applyFilters() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             const platform = document.getElementById('platformFilter').value;
@@ -1025,12 +901,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
             filteredRecords = rawRecords.filter(item => {
                 if (query) {
-                    const matchTW = item.titleTW.toLowerCase().includes(query);
-                    const matchOriginal = item.titleOriginal.toLowerCase().includes(query);
-                    const matchDirector = item.directorStr.toLowerCase().includes(query);
-                    const matchCast = item.castStr.toLowerCase().includes(query);
+                    const matchTW = (item.titleTW || '').toLowerCase().includes(query);
+                    const matchOriginal = (item.titleOriginal || '').toLowerCase().includes(query);
+                    const matchDirector = (item.directorStr || '').toLowerCase().includes(query);
+                    const matchCast = (item.castStr || '').toLowerCase().includes(query);
                     const matchImdb = item.imdb ? item.imdb.toLowerCase().includes(query) : false;
-                    if (!matchTW && !matchOriginal && !matchDirector && !matchCast && !matchImdb) return false;
+ const matchCountry = (item.countryStr || '').toLowerCase().includes(query);
+const matchLanguage = (item.languageStr || '').toLowerCase().includes(query);
+                    const matchGenre = (item.genreStr || '').toLowerCase().includes(query);
+
+                    if (!matchTW && !matchOriginal && !matchDirector && !matchCast && !matchImdb && !matchCountry && !matchLanguage && !matchGenre) return false;
                 }
 
                 if (platform && item.source !== platform) return false;
@@ -1248,7 +1128,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 ` : '';
 
                 return `
-                    <div class="glass-card rounded-2xl p-4 flex flex-col justify-between cursor-pointer group" onclick="openDetailModal(${item.id})">
+                    <div class="glass-card rounded-2xl p-4 flex flex-col justify-between cursor-pointer group" onclick="openDetailModal('${item.no}')">
                         <div>
                             <div class="flex items-center justify-between mb-2">
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${badgeClass}">
@@ -1267,16 +1147,17 @@ window.addEventListener('DOMContentLoaded', () => {
                             </h3>
                             ${item.titleOriginal ? `<p class="text-xs text-gray-400 italic line-clamp-1 mt-0.5 mb-3">${escapeHtml(item.titleOriginal)}</p>` : '<div class="mb-3"></div>'}
 
-                            <!-- Director & Cast without icon & title -->
+                           <!-- Director & Cast without icon & title -->
                             <div class="space-y-1.5 mb-4">
                                 ${item.directors.length > 0 ? `
                                     <div class="flex flex-wrap gap-1">
-                                        ${item.directors.map(d => `
+                                        ${item.directors.slice(0, 2).map(d => `
                                             <span onclick="event.stopPropagation(); filterByPerson('${escapeHtml(d)}')" 
                                                 class="px-1.5 py-0.5 bg-cyan-950/60 border border-cyan-800/50 hover:bg-cyan-900 text-cyan-200 rounded text-[10px] transition">
                                                 ${escapeHtml(d)}
                                             </span>
                                         `).join('')}
+                                        ${item.directors.length > 2 ? `<span class="text-[10px] text-cyan-400 self-center">+${item.directors.length - 2}</span>` : ''}
                                     </div>
                                 ` : ''}
 
@@ -1296,7 +1177,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
                         <div class="pt-2 border-t border-gray-800/60 flex items-center justify-between text-[11px] text-gray-500">
                             <span><i class="fa-regular fa-calendar-check mr-1 text-gray-400"></i>${item.date}</span>
-                            <span class="text-gray-600 font-mono">#${item.id}</span>
+                            <span class="text-gray-600 font-mono">#${item.no}</span>
                         </div>
                     </div>
                 `;
@@ -1314,8 +1195,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 ` : '-';
 
                 return `
-                    <tr class="hover:bg-gray-800/40 transition cursor-pointer" onclick="openDetailModal(${item.id})">
-                        <td class="py-3 px-3 font-mono text-gray-500">#${item.id}</td>
+                    <tr class="hover:bg-gray-800/40 transition cursor-pointer" onclick="openDetailModal('${item.no}')">
+                        <td class="py-3 px-3 font-mono text-gray-500">#${item.no}</td>
                         <td class="py-3 px-3 text-gray-400 whitespace-nowrap">${item.date}</td>
                         <td class="py-3 px-3 font-bold text-white">${escapeHtml(item.titleTW)}</td>
                         <td class="py-3 px-3 text-gray-400 italic">${escapeHtml(item.titleOriginal || '-')}</td>
@@ -1433,11 +1314,11 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        function openDetailModal(id) {
-            const item = rawRecords.find(r => r.id === id);
+        function openDetailModal(no) {
+            const item = rawRecords.find(r => String(r.no) === String(no));
             if (!item) return;
 
-            document.getElementById('detailNo').innerText = `#${item.id}`;
+            document.getElementById('detailNo').innerText = `#${item.no}`;
             document.getElementById('detailPlatform').innerText = item.source;
             document.getElementById('detailPlatform').className = `px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${getPlatformBadgeStyle(item.source)}`;
             document.getElementById('detailTitleTW').innerText = item.titleTW;
