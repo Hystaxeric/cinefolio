@@ -1,9 +1,9 @@
 <!-- 
   ========================================
   專案名稱：Cinefolio 電影誌
-  檔案版本：v3.6
-  更新日期：2026-08-22
-  新增資料欄位
+  檔案版本：v3.61
+  更新日期：2026-08-23
+  新增資料欄位、修復搜尋功能
   ========================================
 -->
 <!DOCTYPE html>
@@ -602,6 +602,36 @@ window.addEventListener('DOMContentLoaded', () => {
             return { urls, jsonpCandidatePaths };
         }
 
+function populatePlatformOptions() {
+    const platformSelect = document.getElementById('platformFilter');
+    if (!platformSelect) return;
+
+    // 1. 從 rawRecords 中收集所有不重複且非空白的平台名稱 (source)
+    const platforms = new Set();
+    rawRecords.forEach(record => {
+        if (record.source && record.source.trim() !== '') {
+            platforms.add(record.source.trim());
+        }
+    });
+
+    // 2. 清空並重建預設選項
+    platformSelect.innerHTML = '<option value="">全部平台 (All Sources)</option>';
+
+    // 3. 排序平台名稱並加入選單中
+    Array.from(platforms).sort().forEach(platform => {
+        const option = document.createElement('option');
+        option.value = platform;
+        option.textContent = platform;
+        platformSelect.appendChild(option);
+    });
+}
+// ==========================================
+
+// 原有的 applyFilters 函數
+function applyFilters() {
+    console.log("Applying filters...");
+    // ... 原有的篩選邏輯 ...
+}
         function fetchGoogleSheetJSONP(path, sheetName = '') {
             return new Promise((resolve, reject) => {
                 const callbackName = 'gvizCallback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
@@ -789,6 +819,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         function parseParsedRows(rows) {
             rawRecords = rows.map((row, idx) => normalizeRecord(row, idx)).filter(Boolean);
+			populatePlatformOptions();
             applyFilters();
         }
 
@@ -906,8 +937,8 @@ window.addEventListener('DOMContentLoaded', () => {
                     const matchDirector = (item.directorStr || '').toLowerCase().includes(query);
                     const matchCast = (item.castStr || '').toLowerCase().includes(query);
                     const matchImdb = item.imdb ? item.imdb.toLowerCase().includes(query) : false;
- const matchCountry = (item.countryStr || '').toLowerCase().includes(query);
-const matchLanguage = (item.languageStr || '').toLowerCase().includes(query);
+                    const matchCountry = (item.countryStr || '').toLowerCase().includes(query);
+                    const matchLanguage = (item.languageStr || '').toLowerCase().includes(query);
                     const matchGenre = (item.genreStr || '').toLowerCase().includes(query);
 
                     if (!matchTW && !matchOriginal && !matchDirector && !matchCast && !matchImdb && !matchCountry && !matchLanguage && !matchGenre) return false;
@@ -944,6 +975,15 @@ const matchLanguage = (item.languageStr || '').toLowerCase().includes(query);
             
             document.getElementById('matchCounter').innerHTML = `顯示 <strong class="text-cinema-accent">${filteredRecords.length}</strong> / ${rawRecords.length} 部紀錄`;
         }
+		
+		function debounce(func, delay = 300) {
+    let timer;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+const debouncedApplyFilters = debounce(() => applyFilters(), 300);
 
         function updateDashboardMetrics() {
             // 使用當前篩選後的紀錄進行動態計算
